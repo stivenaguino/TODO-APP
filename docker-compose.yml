@@ -1,0 +1,39 @@
+version: '3'
+services:
+   app:
+      build: ./app
+      container_name: php-container
+      ports:
+         - '8080:80'
+      networks:
+         - app-network
+      depends_on:
+         - mysql
+
+   mysql:
+      image: mysql:5.7
+      container_name: mysql-container
+      restart: always
+      environment:
+         MYSQL_ROOT_PASSWORD: rootpassword
+         MYSQL_DATABASE: todo_db
+      volumes:
+         - ./mysql/data:/var/lib/mysql
+      networks:
+         - app-network
+
+   phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: phpmyadmin-container
+      restart: always
+      environment:
+         PMA_HOST: mysql-container
+         MYSQL_ROOT_PASSWORD: rootpassword
+      ports:
+         - '8081:80'
+      networks:
+         - app-network
+
+networks:
+   app-network:
+      driver: bridge
