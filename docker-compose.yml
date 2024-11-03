@@ -1,4 +1,5 @@
 version: '3'
+
 services:
    app:
       build: ./app
@@ -8,7 +9,13 @@ services:
       networks:
          - app-network
       depends_on:
-         - mysql
+         mysql:
+            condition: service_healthy
+      environment:
+         - MYSQL_HOST=mysql-container
+         - MYSQL_DATABASE=todo_db
+         - MYSQL_USER=root
+         - MYSQL_PASSWORD=rootpassword
 
    mysql:
       image: mysql:5.7
@@ -19,8 +26,13 @@ services:
          MYSQL_DATABASE: todo_db
       volumes:
          - ./mysql/data:/var/lib/mysql
+         - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
       networks:
          - app-network
+      healthcheck:
+         test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+         timeout: 5s
+         retries: 10
 
    phpmyadmin:
       image: phpmyadmin/phpmyadmin
@@ -33,6 +45,9 @@ services:
          - '8081:80'
       networks:
          - app-network
+      depends_on:
+         mysql:
+            condition: service_healthy
 
 networks:
    app-network:
