@@ -12,21 +12,21 @@ pipeline {
         stage('Build') {
             steps {
                 // Construir los contenedores
-                bat 'docker-compose build'
+                sh 'docker-compose build'
             }
         }
         
         stage('Test') {
             steps {
                 // Aquí puedes agregar tus pruebas
-                bat 'echo "Ejecutando pruebas..."'
+                sh 'echo "Ejecutando pruebas..."'
             }
         }
         
         stage('Deploy') {
             steps {
                 // Desplegar la aplicación
-                bat 'docker-compose up -d'
+                sh 'docker-compose up -d'
             }
         }
     }
@@ -34,7 +34,7 @@ pipeline {
     post {
         always {
             // Limpiar recursos
-            bat 'docker-compose down || true'
+            sh 'docker-compose down || true'
         }
         success {
             echo 'Pipeline ejecutado exitosamente!'
