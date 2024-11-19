@@ -1,71 +1,52 @@
-version: '3'
+version: '3.8'
+
 services:
-   app:
-      build: ./app
-      container_name: php-container
+   app-container:
+      container_name: app-container
+      build:
+         context: .
+         dockerfile: Dockerfile
       ports:
          - '8080:80'
       networks:
          - app-network
       depends_on:
-         mysql:
-            condition: service_healthy
-      environment:
-         - MYSQL_HOST=mysql-container
-         - MYSQL_DATABASE=todo_db
-         - MYSQL_USER=root
-         - MYSQL_PASSWORD=rootpassword
+         - db-container
 
-   mysql:
+   db-container:
+      container_name: db-container
       image: mysql:5.7
-      container_name: mysql-container
-      restart: always
       environment:
          MYSQL_ROOT_PASSWORD: rootpassword
-         MYSQL_DATABASE: todo_db
-      volumes:
-         - ./mysql/data:/var/lib/mysql
-         - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      networks:
-         - app-network
-      healthcheck:
-         test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
-         timeout: 5s
-         retries: 10
-
-   phpmyadmin:
-      image: phpmyadmin/phpmyadmin
-      container_name: phpmyadmin-container
-      restart: always
-      environment:
-         PMA_HOST: mysql-container
-         MYSQL_ROOT_PASSWORD: rootpassword
+         MYSQL_DATABASE: tododb
+         MYSQL_USER: todouser
+         MYSQL_PASSWORD: todopassword
       ports:
-         - '8081:80'
+         - '3306:3306'
+      volumes:
+         - db_data:/var/lib/mysql
       networks:
          - app-network
-      depends_on:
-         mysql:
-            condition: service_healthy
 
-   jenkins:
+   jenkins-container:
+      container_name: jenkins-container
       build:
          context: .
          dockerfile: Dockerfile.jenkins
-      container_name: jenkins-container
-      privileged: true
-      user: root
       ports:
-         - '8082:8080'
-         - '50000:50000'
-      volumes:
-         - ./jenkins_home:/var/jenkins_home
-         - /var/run/docker.sock:/var/run/docker.sock
+         - '8081:8080'
       networks:
          - app-network
-      environment:
-         - DOCKER_HOST=unix:///var/run/docker.sock
+      volumes:
+         - jenkins_data:/var/jenkins_home
+         - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
    app-network:
-      driver: bridge
+      name: todo_list_app_network
+
+volumes:
+   db_data:
+      name: todo_list_db_data
+   jenkins_data:
+      name: todo_list_jenkins_data
