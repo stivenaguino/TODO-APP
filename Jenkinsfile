@@ -10,17 +10,17 @@ pipeline {
         
         stage('Clean Up') {
             steps {
-                // Detener y eliminar contenedores existentes
                 sh '''
-                    # Detener y eliminar todos los contenedores relacionados con este proyecto
+                    # Detener y eliminar contenedores específicos
+                    docker stop jenkins-container || true
+                    docker rm jenkins-container || true
+                    
+                    # Detener y eliminar cualquier otro contenedor asociado al proyecto
                     docker-compose down || true
-                    docker rm -f $(docker ps -a -q --filter "name=todo-list-pipeline") || true
                     
-                    # Eliminar redes asociadas
-                    docker network rm $(docker network ls --filter "name=todo-list-pipeline" -q) || true
-                    
-                    # Limpiar volúmenes
-                    docker volume rm $(docker volume ls -f "name=todo-list-pipeline" -q) || true
+                    # Eliminar redes y volúmenes residuales
+                    docker network rm app-network || true
+                    docker volume prune -f || true
                 '''
             }
         }
@@ -40,7 +40,6 @@ pipeline {
     
     post {
         always {
-            // Limpieza en caso de fallo
             sh 'docker-compose down || true'
         }
         success {
