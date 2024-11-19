@@ -12,9 +12,15 @@ pipeline {
             steps {
                 // Detener y eliminar contenedores existentes
                 sh '''
+                    # Detener y eliminar todos los contenedores relacionados con este proyecto
                     docker-compose down || true
-                    # Forzar eliminación de contenedores si existen
-                    docker rm -f mysql-container php-container phpmyadmin-container || true
+                    docker rm -f $(docker ps -a -q --filter "name=todo-list-pipeline") || true
+                    
+                    # Eliminar redes asociadas
+                    docker network rm $(docker network ls --filter "name=todo-list-pipeline" -q) || true
+                    
+                    # Limpiar volúmenes
+                    docker volume rm $(docker volume ls -f "name=todo-list-pipeline" -q) || true
                 '''
             }
         }
