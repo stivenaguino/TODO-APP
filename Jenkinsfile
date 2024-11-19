@@ -4,28 +4,29 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Obtener código del repositorio
                 checkout scm
+            }
+        }
+        
+        stage('Clean Up') {
+            steps {
+                // Detener y eliminar contenedores existentes
+                sh '''
+                    docker-compose down || true
+                    # Forzar eliminación de contenedores si existen
+                    docker rm -f mysql-container php-container phpmyadmin-container || true
+                '''
             }
         }
         
         stage('Build') {
             steps {
-                // Construir los contenedores
                 sh 'docker-compose build'
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                // Aquí puedes agregar tus pruebas
-                sh 'echo "Ejecutando pruebas..."'
             }
         }
         
         stage('Deploy') {
             steps {
-                // Desplegar la aplicación
                 sh 'docker-compose up -d'
             }
         }
@@ -33,7 +34,7 @@ pipeline {
     
     post {
         always {
-            // Limpiar recursos
+            // Limpieza en caso de fallo
             sh 'docker-compose down || true'
         }
         success {
